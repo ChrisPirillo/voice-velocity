@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Velocity: Synthwave Runner</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="Voice Velocity is a high-octane synthwave runner game controlled by your voice. Scream to jump and whisper to run in this neon arcade experience.">
+    <meta name="keywords" content="voice controlled game, synthwave runner, audio game, browser game, mic controlled, voice velocity, arcade game, neon game, infinite runner">
+    <meta name="author" content="Chris Pirillo">
+    <link rel="canonical" href="https://pirillo.com/arcade/voice-velocity.html">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="Voice Velocity: Synthwave Runner">
+    <meta property="og:description" content="Control the speed with your voice in this neon-infused synthwave runner. Speak to run, shout to jump!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pirillo.com/arcade/voice-velocity.html">
+    <meta property="og:image" content="https://pirillo.com/arcade/images/voice-velocity.png">
+    <meta property="og:site_name" content="Pirillo Arcade">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@ChrisPirillo">
+    <meta name="twitter:title" content="Voice Velocity: Synthwave Runner">
+    <meta name="twitter:description" content="A voice-controlled infinite runner set in a synthwave universe.">
+    <meta name="twitter:image" content="https://pirillo.com/arcade/images/voice-velocity.png">
+
+    <!-- Resource Hints & Font Optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Voice Velocity",
+      "url": "https://pirillo.com/arcade/voice-velocity.html",
+      "author": {
+        "@type": "Person",
+        "name": "Chris Pirillo",
+        "sameAs": "https://chris.pirillo.com/"
+      },
+      "description": "A voice-controlled infinite runner game where audio input level determines speed and jump height.",
+      "applicationCategory": "Game",
+      "operatingSystem": "Browser",
+      "genre": "Arcade",
+      "image": "https://pirillo.com/arcade/images/voice-velocity.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <style>
+        /* CSS variables and global styles */
+        :root {
+            --bg-color: #0d0221; 
+            --text-color: #ff00ff; 
+            --accent-color: #00ffff; 
+            --danger-color: #ff0055; 
+            --ui-bg: rgba(13, 2, 33, 0.9);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Space Mono', monospace;
+            color: var(--text-color);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #000000 0%, #1a0b2e 100%);
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hud {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .volume-meter-container {
+            width: 220px;
+            background: rgba(20, 0, 40, 0.8);
+            border: 2px solid var(--accent-color);
+            padding: 10px;
+            border-radius: 6px;
+            position: relative; 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .volume-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #volume-bar {
+            height: 12px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-color), var(--text-color));
+            border-radius: 2px;
+            transition: width 0.05s linear;
+            box-shadow: 0 0 15px var(--text-color);
+        }
+        
+        #threshold-line {
+            position: absolute;
+            top: 33px;
+            bottom: 12px;
+            width: 3px;
+            background-color: #fff;
+            z-index: 5;
+            box-shadow: 0 0 8px #fff;
+            display: none; 
+        }
+
+        .score-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 40px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 3px 3px 0px var(--text-color), 0 0 20px var(--accent-color);
+            font-style: italic;
+        }
+
+        .debug-info {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            text-align: right;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 2, 33, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom, #00ffff 0%, #ffffff 40%, #ff00ff 60%, #1a0033 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            filter: drop-shadow(0px 0px 20px rgba(255,0,255,0.5));
+            transform: skew(-10deg);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 4rem;
+            color: var(--danger-color);
+            text-shadow: 0 0 30px var(--danger-color);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            transform: skew(-5deg);
+        }
+
+        p {
+            font-family: 'Space Mono', monospace;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--accent-color);
+            border: 3px solid var(--accent-color);
+            padding: 20px 60px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            box-shadow: 0 0 20px var(--accent-color), inset 0 0 20px rgba(0,255,255,0.2);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: 0 0 60px var(--accent-color);
+        }
+
+        .controls-hint {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            text-align: center;
+        }
+
+        .hint-box {
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 25px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .hint-icon { 
+            font-size: 40px; 
+            margin-bottom: 15px; 
+            display: block; 
+        }
+        
+        strong {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-color);
+            letter-spacing: 1px;
+            font-size: 1.2em;
+        }
+        
+        .blink-text {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <canvas id="gameCanvas"></canvas>
+
+        <section id="ui-layer">
+            <header class="hud">
+                <div class="volume-meter-container">
+                    <div class="volume-label">
+                        <span>Audio Input</span>
+                        <span id="speed-readout">0%</span>
+                    </div>
+                    <div id="volume-bar"></div>
+                    <div id="threshold-line"></div>
+                    <div id="debug-status" class="debug-info">Status: Idle</div>
+                </div>
+                <div class="score-display"><span id="score">0</span><span style="font-size:0.5em; opacity:0.7">m</span></div>
+            </header>
+        </section>
+
+        <section id="start-screen" class="overlay">
+            <h1>Voice Velocity</h1>
+            <p>ENDLESS AUDIO RUNNER</p>
+            
+            <article class="controls-hint">
+                <div class="hint-box">
+                    <span class="hint-icon" role="img" aria-label="Microphone">🗣️</span>
+                    <strong>SPEAK</strong><br>to Run
+                </div>
+                <div class="hint-box">
+                    <span class="hint-icon" role="img" aria-label="Explosion">💥</span>
+                    <strong>LOUD SPIKE</strong><br>High Jump
+                </div>
+            </article>
+
+            <p style="margin-top: 3rem; font-size: 0.8em; opacity: 0.6;">
+                Microphone Access Required
+            </p>
+
+            <button class="btn" id="start-btn">START GAME</button>
+        </section>
+
+        <section id="game-over-screen" class="overlay hidden">
+            <h2>CRITICAL ERROR</h2>
+            <p>IMPACT DETECTED</p>
+            <p>DISTANCE: <span id="final-score" style="color:#fff; font-weight:900; font-size: 1.5em;">0</span>m</p>
+            <div style="margin-top: 20px; font-family: 'Orbitron', sans-serif; color: var(--accent-color); font-size: 1.2em;" class="blink-text">
+                [ SHOUT TO REBOOT ]
+            </div>
+            <button class="btn" id="restart-btn" style="margin-top: 20px; font-size: 1rem; padding: 10px 30px;">OR CLICK HERE</button>
+        </section>
+    </main>
+
+<script>
+class AudioEngine {
+    constructor() {
+        this.audioContext = null;
+        this.analyser = null;
+        this.dataArray = null;
+        this.source = null;
+        this.volume = 0;
+        this.isInitialized = false;
+        this.smoothing = 0.1; 
+        this.statusElement = document.getElementById('debug-status');
+    }
+
+    async init() {
+        try {
+            this.statusElement.innerText = "Mic: Requesting...";
+            
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioContextClass({ latencyHint: 'interactive' });
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { 
+                    echoCancellation: false,
+                    autoGainControl: false,
+                    noiseSuppression: false, 
+                    latency: 0
+                } 
+            });
+            
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 256; // Fast response
+            this.source = this.audioContext.createMediaStreamSource(stream);
+            this.source.connect(this.analyser);
+            
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            this.isInitialized = true;
+            
+            this.statusElement.innerText = "Mic: Active";
+            this.statusElement.style.color = "#00ffcc";
+            document.getElementById('threshold-line').style.display = 'block';
+
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
+            this.audioContext.onstatechange = () => {
+                 this.statusElement.innerText = `Mic: ${this.audioContext.state}`;
+            };
+
+        } catch (err) {
+            console.error("Audio init failed:", err);
+            this.statusElement.innerText = "Mic: Error/Denied";
+            this.statusElement.style.color = "#ff0000";
+            alert("Microphone access failed. Please allow access to play.");
+        }
+    }
+
+    getVolume() {
+        if (!this.isInitialized) return 0;
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+            return 0;
+        }
+
+        this.analyser.getByteTimeDomainData(this.dataArray);
+        
+        let sum = 0;
+        for (let i = 0; i < this.dataArray.length; i++) {
+            const amplitude = this.dataArray[i] - 128;
+            sum += amplitude * amplitude;
+        }
+        
+        const rms = Math.sqrt(sum / this.dataArray.length);
+        let normalized = Math.min(1, rms / 20); 
+        this.volume = (normalized * (1 - this.smoothing)) + (this.volume * this.smoothing);
+        
+        // Deadzone remains low to catch quiet inputs for movement
+        if (this.volume < 0.05) this.volume = 0;
+
+        return this.volume;
+    }
+}
+
+// --- BACKGROUND SYSTEM ---
+const bgStars = [];
+const bgMountains = [];
+const bgCity = [];
+const sunCanvas = document.createElement('canvas');
+const sunCtx = sunCanvas.getContext('2d');
+
+function initBackgrounds() {
+    // Stars
+    bgStars.length = 0;
+    for(let i=0; i<150; i++) {
+        bgStars.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * (window.innerHeight * 0.6),
+            size: Math.random() * 2,
+            opacity: Math.random(),
+            color: Math.random() > 0.8 ? '#00ffff' : '#ffffff'
+        });
+    }
+
+    // Infinite Scrolling City
+    bgCity.length = 0;
+    let cx = 0;
+    while(cx < window.innerWidth * 2) {
+        addBuilding(cx);
+        cx += bgCity[bgCity.length-1].w + 5;
+    }
+
+    // Infinite Scrolling Mountains
+    bgMountains.length = 0;
+    let mx = -200;
+    while(mx < window.innerWidth * 2) {
+        addMountain(mx);
+        mx += bgMountains[bgMountains.length-1].w - 50;
+    }
+}
+
+function addBuilding(x) {
+    let w = 50 + Math.random() * 80;
+    let h = 100 + Math.random() * 300; 
+    let windows = [];
+    for(let wx=5; wx<w-5; wx+=10) {
+        for(let wy=10; wy<h-10; wy+=15) {
+            if(Math.random() > 0.4) {
+                windows.push({x: wx, y: wy, color: Math.random()>0.5 ? '#00ffff' : '#ff00ff'});
+            }
+        }
+    }
+    bgCity.push({ x: x, w: w, h: h, windows: windows });
+}
+
+function addMountain(x) {
+    let w = 300 + Math.random() * 400;
+    let h = 150 + Math.random() * 200; 
+    bgMountains.push({ x: x, w: w, h: h });
+}
+
+// --- GAME CONSTANTS ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const thresholdLine = document.getElementById('threshold-line');
+
+// PHYSICS TUNING
+const GRAVITY = 0.6; 
+// Jump Variables
+const BASE_JUMP_POWER = -9; // Minimum hop
+const MAX_JUMP_POWER = -18; // Max scream jump
+const MOVE_SPEED = 12;
+
+// SENSITIVITY TUNING 
+const MOVEMENT_THRESHOLD = 0.05; 
+const JUMP_THRESHOLD = 0.35;     // RAISED: Requires a clear spike to jump
+const JUMP_RESET_THRESHOLD = 0.10; // LOWERED: Must get quieter to reset
+
+thresholdLine.style.left = (JUMP_THRESHOLD * 100) + '%';
+
+let audioEngine = new AudioEngine();
+let gameLoopId;
+let lastTime = 0;
+let gameState = 'MENU'; 
+let gameOverTime = 0; 
+
+let camera = { x: 0, y: 0 };
+let score = 0;
+let jumpLocked = false; 
+let globalTime = 0;
+let lastMicVol = 0; // For spike detection
+
+let player = {
+    x: 200,
+    y: 0,
+    width: 30, 
+    height: 30,
+    vx: 0,
+    vy: 0,
+    grounded: false,
+    color: '#ff00ff',
+    rotation: 0
+};
+
+let platforms = [];
+let particles = [];
+let hazards = []; 
+let nextSpawnX = -1000;
+let difficultyMultiplier = 1;
+
+function resize() {
+    canvas.width = window.innerWidth || 800;
+    canvas.height = window.innerHeight || 600;
+    sunCanvas.width = canvas.width;
+    sunCanvas.height = canvas.height;
+    if(bgStars.length === 0) initBackgrounds();
+}
+window.addEventListener('resize', resize);
+
+function resetGame() {
+    player.x = 200;
+    player.y = canvas.height / 2;
+    player.vx = 0; 
+    player.vy = 0;
+    camera.x = 0;
+    score = 0;
+    difficultyMultiplier = 1;
+    jumpLocked = false;
+    
+    platforms = [];
+    hazards = [];
+    particles = [];
+    nextSpawnX = -1000;
+
+    initBackgrounds(); 
+    generateSection('SAFE', 1200); 
+}
+
+// --- PROCEDURAL GENERATION ---
+
+function generateSection(type, length) {
+    const startX = nextSpawnX;
+    const groundY = canvas.height - 150;
+
+    platforms.push({ x: startX, y: groundY, w: length, h: 200 });
+
+    if (type === 'HAZARD') {
+        const numHazards = 1 + Math.floor(Math.random() * 2); 
+        const spacing = length / (numHazards + 1);
+
+        for(let i=1; i<=numHazards; i++) {
+            const centerX = startX + (spacing * i) + (Math.random() * 100 - 50);
+            const w = 30 + Math.random() * 50;
+            const h = 40 + Math.random() * 80;
+            
+            const points = [];
+            const numVerts = 4 + Math.floor(Math.random() * 5);
+            points.push({x: 0, y: h}); 
+            for(let v=0; v<numVerts-2; v++) {
+                points.push({
+                    x: w * (Math.random()), 
+                    y: h * (Math.random() * 0.8) 
+                });
+            }
+            points.sort((a, b) => a.x - b.x);
+            points.push({x: w, y: h}); 
+
+            hazards.push({
+                x: centerX - w/2,
+                y: groundY - h,
+                w: w, h: h,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                points: points,
+                type: 'procedural'
+            });
+        }
+    }
+    nextSpawnX += length;
+}
+
+function updateLevelGeneration() {
+    const horizon = camera.x + canvas.width + 500;
+    while (nextSpawnX < horizon) {
+        const rand = Math.random();
+        const hazardChance = Math.min(0.7, 0.3 + (player.x / 10000)); 
+        
+        if (rand < hazardChance) {
+             generateSection('HAZARD', 400 + Math.random() * 200); 
+        } else {
+            generateSection('SAFE', 400 + Math.random() * 400);
+        }
+    }
+    
+    platforms = platforms.filter(p => p.x + p.w > camera.x - 500); 
+    hazards = hazards.filter(h => h.x + h.w > camera.x - 500);
+    
+    while(bgCity.length > 0 && bgCity[0].x < camera.x * 0.1 - 200) {
+        bgCity.shift();
+        let lastX = bgCity[bgCity.length-1].x + bgCity[bgCity.length-1].w + 5;
+        addBuilding(lastX); 
+    }
+}
+
+function update(dt) {
+    globalTime += 0.05;
+    const micVol = audioEngine.getVolume();
+    
+    // UI Update
+    const displayVol = Math.min(100, Math.round(micVol * 100));
+    const vBar = document.getElementById('volume-bar');
+    vBar.style.width = `${displayVol}%`;
+    
+    if (displayVol > JUMP_THRESHOLD * 100) {
+        let intensity = (micVol - JUMP_THRESHOLD) / (0.8 - JUMP_THRESHOLD);
+        if (intensity > 0.8) vBar.style.backgroundColor = '#fff'; 
+        else vBar.style.backgroundColor = '#ff00ff'; 
+    } else {
+        vBar.style.backgroundColor = 'var(--text-color)';
+    }
+
+    // --- VOICE RETRY LOGIC ---
+    if (gameState === 'GAMEOVER') {
+        if (Date.now() > gameOverTime + 1000 && micVol > JUMP_THRESHOLD) {
+             document.getElementById('game-over-screen').classList.add('hidden');
+             resetGame();
+             gameState = 'PLAYING';
+        }
+        return;
+    }
+
+    if (gameState !== 'PLAYING') return;
+
+    // --- PHYSICS CORE ---
+    
+    // 1. Horizontal Movement (Momentum based)
+    if (player.grounded) {
+        if (micVol > MOVEMENT_THRESHOLD) {
+            if (player.vx < MOVE_SPEED) player.vx += 0.8;
+        } else {
+            player.vx *= 0.6; // High Friction Braking
+            if (player.vx < 0.1) player.vx = 0;
+        }
+    } else {
+        if (micVol > MOVEMENT_THRESHOLD && player.vx < MOVE_SPEED) {
+            player.vx += 0.1; 
+        }
+    }
+    
+    player.x += player.vx;
+    player.rotation += player.vx * 0.05;
+
+    // 2. Variable Jump Logic (SPIKE DETECTION)
+    if (micVol < JUMP_RESET_THRESHOLD) jumpLocked = false;
+
+    // Spike calculation: change in volume since last frame
+    let spike = micVol - lastMicVol;
+    lastMicVol = micVol;
+
+    // Jump triggers if:
+    // 1. Above absolute threshold
+    // 2. Is a "spike" (rising rapidly, not just steady noise)
+    // 3. Not locked
+    let isSpike = spike > 0.05 || micVol > 0.6; // High volume always jumps, low volume needs spike
+
+    if (player.grounded && micVol > JUMP_THRESHOLD && isSpike && !jumpLocked) {
+        player.grounded = false;
+        jumpLocked = true;
+        
+        let jumpIntensity = (micVol - JUMP_THRESHOLD) / (0.8 - JUMP_THRESHOLD);
+        jumpIntensity = Math.max(0, Math.min(1, jumpIntensity));
+        
+        // LOUDER = HIGHER
+        const jumpPower = -10 + (jumpIntensity * -14);
+        player.vy = jumpPower;
+        
+        // LOUDER = FURTHER
+        const forwardBoost = 5 + (jumpIntensity * 10);
+        player.vx = Math.max(player.vx, forwardBoost);
+        if (player.vx > 18) player.vx = 18; 
+        
+        createBurst(player.x, player.y + player.height);
+    }
+
+    // 3. Vertical Physics
+    let currentGravity = GRAVITY;
+    if (Math.abs(player.vy) < 2) currentGravity = GRAVITY * 0.6;
+    
+    player.vy += currentGravity;
+    player.y += player.vy;
+
+    // 4. Collisions
+    updateLevelGeneration();
+
+    player.grounded = false;
+    for (let p of platforms) {
+        if (player.x < p.x + p.w && player.x + player.width > p.x &&
+            player.y + player.height > p.y && player.y + player.height < p.y + p.h + 30 &&
+            player.vy >= 0) {
+            player.grounded = true;
+            player.vy = 0;
+            player.y = p.y - player.height;
+        }
+    }
+
+    // Hazard Collision
+    const padding = 12;
+    for (let h of hazards) {
+        if (player.x + padding < h.x + h.w - padding &&
+            player.x + player.width - padding > h.x + padding &&
+            player.y + padding < h.y + h.h - padding &&
+            player.y + player.height - padding > h.y + padding) {
+            triggerGameOver();
+        }
+    }
+
+    if (player.y > canvas.height) triggerGameOver();
+
+    let targetCamX = player.x - 200;
+    camera.x += (targetCamX - camera.x) * 0.1;
+    
+    score = Math.floor(player.x / 10);
+    document.getElementById('score').innerText = score;
+    
+    updateParticles();
+}
+
+function draw() {
+    let grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grd.addColorStop(0, "#000000");
+    grd.addColorStop(0.6, "#1a0033"); 
+    grd.addColorStop(1, "#4a0072"); 
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (sunCanvas.width > 0) {
+        prepareSun();
+        ctx.drawImage(sunCanvas, 0, 0);
+    }
+
+    drawParallaxBackground();
+
+    ctx.save();
+    ctx.translate(-camera.x, 0);
+
+    for (let p of platforms) {
+        ctx.fillStyle = '#0d0221';
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+        
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + p.w, p.y);
+        ctx.strokeStyle = '#ff00ff';
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff00ff';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        let offset = Math.floor(p.x / 100) * 100;
+        for(let i=offset; i<p.x+p.w; i+=100) {
+            if(i < p.x) continue;
+            ctx.beginPath();
+            ctx.moveTo(i, p.y);
+            ctx.lineTo(i - (i-camera.x-canvas.width/2)*0.5, p.y + p.h);
+            ctx.stroke();
+        }
+        for(let i=10; i<p.h; i*=1.4) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y + i);
+            ctx.lineTo(p.x + p.w, p.y + i);
+            ctx.stroke();
+        }
+    }
+
+    for (let h of hazards) {
+        drawHazard(h);
+    }
+
+    drawPlayer();
+    drawParticles();
+    ctx.restore();
+    requestAnimationFrame(gameLoop);
+}
+
+function drawHazard(h) {
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    
+    ctx.beginPath();
+    h.points.forEach((p, i) => {
+        if (i===0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    
+    ctx.fillStyle = h.color;
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+    
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = h.color;
+    ctx.stroke();
+    
+    ctx.restore();
+}
+
+function prepareSun() {
+    sunCtx.clearRect(0, 0, sunCanvas.width, sunCanvas.height);
+    let sunX = sunCanvas.width / 2;
+    let sunY = sunCanvas.height * 0.4; 
+    let sunSize = sunCanvas.height * 0.2; 
+
+    let sunGrd = sunCtx.createLinearGradient(0, sunY - sunSize, 0, sunY + sunSize);
+    sunGrd.addColorStop(0, '#ffcc00'); 
+    sunGrd.addColorStop(0.5, '#ff6600'); 
+    sunGrd.addColorStop(1, '#ff0066'); 
+
+    sunCtx.save();
+    sunCtx.fillStyle = sunGrd;
+    sunCtx.beginPath();
+    sunCtx.arc(sunX, sunY, sunSize, 0, Math.PI * 2);
+    sunCtx.fill();
+
+    sunCtx.globalCompositeOperation = 'destination-out';
+    sunCtx.fillStyle = "black"; 
+    for(let i=5; i<sunSize; i+=12) {
+        let h = 2 + i/15; 
+        if(i > 0) sunCtx.fillRect(sunX - sunSize - 10, sunY + i, sunSize*2 + 20, h);
+    }
+    sunCtx.restore();
+}
+
+function drawParallaxBackground() {
+    bgStars.forEach(star => {
+        let px = (star.x - camera.x * 0.05) % window.innerWidth;
+        if (px < 0) px += window.innerWidth;
+        ctx.fillStyle = star.color;
+        ctx.globalAlpha = star.opacity;
+        ctx.fillRect(px, star.y, star.size, star.size);
+    });
+    ctx.globalAlpha = 1;
+
+    const cityParallax = 0.2;
+    bgCity.forEach(b => {
+        let px = b.x - camera.x * cityParallax;
+        if(px > -100 && px < canvas.width) {
+            ctx.fillStyle = '#050010';
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.fillRect(px, canvas.height - 150 - b.h, b.w, b.h);
+            ctx.strokeRect(px, canvas.height - 150 - b.h, b.w, b.h);
+            b.windows.forEach(win => {
+                ctx.fillStyle = win.color;
+                ctx.fillRect(px + win.x, canvas.height - 150 - b.h + win.y, 3, 5);
+            });
+        }
+    });
+
+    const mtnParallax = 0.5;
+    ctx.fillStyle = '#120024';
+    ctx.strokeStyle = '#ff00ff';
+    bgMountains.forEach(m => {
+        let px = m.x - camera.x * mtnParallax;
+        if(px > -500 && px < canvas.width) {
+            ctx.beginPath();
+            ctx.moveTo(px, canvas.height - 150);
+            ctx.lineTo(px + m.w/2, canvas.height - 150 - m.h);
+            ctx.lineTo(px + m.w, canvas.height - 150);
+            ctx.fill();
+            ctx.stroke();
+        }
+        if (px < -m.w) {
+             m.x += (bgMountains.length * 300); 
+        }
+    });
+}
+
+function drawPlayer() {
+    ctx.save();
+    let cx = player.x + player.width/2;
+    let cy = player.y + player.height/2;
+    ctx.translate(cx, cy);
+
+    let sx = 1, sy = 1;
+    if (!player.grounded) {
+        sy = 1 + Math.min(0.3, Math.abs(player.vy) * 0.02);
+        sx = 1 - Math.min(0.3, Math.abs(player.vy) * 0.02);
+    }
+    ctx.scale(sx, sy);
+
+    ctx.rotate(player.rotation);
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = player.color;
+    
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI*2);
+    ctx.fill();
+    
+    ctx.strokeStyle = player.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 15, 0, Math.PI*2);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    for(let i=0; i<4; i++) {
+        ctx.rotate(Math.PI/2);
+        ctx.moveTo(15, 0);
+        ctx.lineTo(22, 0);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function createBurst(x, y) {
+    for(let i=0; i<15; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random()-0.5)*10,
+            vy: (Math.random()-1)*8,
+            life: 1.0,
+            color: Math.random()>0.5 ? '#00ffff' : '#ff00ff'
+        });
+    }
+}
+
+function updateParticles() {
+    for(let i=particles.length-1; i>=0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3; 
+        p.life -= 0.05;
+        if(p.life <= 0) particles.splice(i,1);
+    }
+}
+
+function drawParticles() {
+    for(let p of particles) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    update(dt);
+    draw();
+}
+
+function triggerGameOver() {
+    gameState = 'GAMEOVER';
+    gameOverTime = Date.now(); // Record time of death
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('game-over-screen').classList.remove('hidden');
+}
+
+document.getElementById('start-btn').addEventListener('click', async () => {
+    await audioEngine.init();
+    if (audioEngine.audioContext && audioEngine.audioContext.state === 'suspended') {
+        await audioEngine.audioContext.resume();
+    }
+    document.getElementById('start-screen').classList.add('hidden');
+    resetGame();
+    gameState = 'PLAYING';
+    gameLoopId = requestAnimationFrame(gameLoop);
+});
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+    document.getElementById('game-over-screen').classList.add('hidden');
+    resetGame();
+    gameState = 'PLAYING';
+});
+
+resize();
+if (sunCanvas.width > 0) {
+    prepareSun();
+    ctx.fillStyle = '#1a0033';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(sunCanvas, 0, 0);
+}
+
+</script>
+</body>
+</html>
